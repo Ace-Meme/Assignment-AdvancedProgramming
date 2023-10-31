@@ -20,14 +20,14 @@ RIGHT_LIMIT = 4000
 JUMP_FORCE = 20
 
 point = 0
-ammo = 0
 lives = 50
+ammo = 7
 shooting = False
 boss_appeared = False
 super_saiyan = False
 boss_defeated = 0
 
-running = False
+running = True
 game_start = True
 game_over = False
 stage = 0
@@ -40,6 +40,7 @@ green = (0, 255, 0)
 blue = (0, 0, 255)
 white = (255, 255, 255)
 black = (0, 0, 0)
+half_red = (255, 0, 0, 50)
 
 font = pygame.font.SysFont("Arial", 30)
 font_menu = pygame.font.SysFont("Arial", 50)
@@ -133,16 +134,24 @@ class Entity:
 
 
 class Obstacle:
-    def __init__(self, file, name) -> None:
+    def __init__(self, name, x, y, file, moving, direction) -> None:
         self.image = pygame.image.load(file)
-        self.x = 0
-        self.y = 0
+        self.x = x
+        self.y = y
         self.width = self.image.get_rect().w
         self.height = self.image.get_rect().h
         self.name = name
-
+        self.moving = moving
+        self.direction = direction
         self.visible = False
         pass
+
+    def move(self):
+        if self.moving:
+            if self.direction:
+                self.x -= speed[self.name]
+            else:
+                self.x += speed[self.name]
 
     def draw(self, screen, camera):
         screen.blit(self.image, (self.x - camera.x, self.y - camera.y))
@@ -191,7 +200,7 @@ class SoundEffect:
         self.missSound = pygame.mixer.Sound("sounds/miss.wav")
         self.levelSound = pygame.mixer.Sound("sounds/point.wav")
         pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(0.1)
+        pygame.mixer.music.set_volume(0.4)
 
     def playCountDown(self):
         self.countDownSound.play()
@@ -209,7 +218,7 @@ class SoundEffect:
 
     def playPop(self):
         self.popSound.play()
-        self.popSound.set_volume(0.2)
+        self.popSound.set_volume(0.05)
 
     def stopPop(self):
         self.popSound.stop()
@@ -254,6 +263,7 @@ class Button(pygame.sprite.Sprite):
        #self.appeared = False
 
     def is_mouse_pressed(self) -> bool:
+        print(self.name + "araara")
         mouse_pos_x, mouse_pos_y = pygame.mouse.get_pos()
         x = self.rect.x
         y = self.rect.y
@@ -298,9 +308,8 @@ str_player = [
 ]
 
 player = Entity(PLAYER, 405, 270, str_player, False, False)
-print(player.width, player.height)
-brick = Rectangle(0, 315, 4000, 100, "", "", white)
-lock = Rectangle(1500, 200, 50, 50, "", 0, blue)
+brick = Rectangle(0, 315, 4000, 100, "", "", white) #floor
+lock = Rectangle(1500, 200, 50, 50, "", 0, blue) # super_mode
 
 
 background = [Rectangle(0, 0, 0, 0, "image/R.png", "", white), 
@@ -327,6 +336,7 @@ start = Button(red, 200, 50, 260, 150, "start")
 option = Button(red, 200, 50, 260, 220, "option")
 about = Button(red, 200, 50, 260, 290, "about")
 exit = Button(red, 200, 50, 260, 360, "exit")
+restart = Button(red, 0, 0, 260, 290, "restart")
 
 normal_mode = Button(red, 300, 50, 260, 150, "normal mode")
 hard_mode = Button(red, 300, 50, 260, 290, "hard mode")
@@ -335,215 +345,231 @@ super_mode = white
 offer_option = False
 about_text = False
 
-while game_start:
-
-    
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game_start = False
-        elif event.type == pygame.MOUSEBUTTONUP:
-            if start.is_mouse_pressed() and not offer_option:
-                game_start = False
-                running = True
-            elif option.is_mouse_pressed() and not offer_option:
-                offer_option = True
-            elif about.is_mouse_pressed() and not offer_option:
-                about_text = True
-            elif normal_mode.is_mouse_pressed() and offer_option:
-                lives = 70
-                offer_option = False
-            elif hard_mode.is_mouse_pressed() and offer_option:
-                lives = 50
-                offer_option = False
-            elif exit.is_mouse_pressed() and not offer_option:
-                game_start = False
-                running = False
-
-    screen.fill(black)
-    screen.blit(title, (230, 100))
-    if offer_option:
-        normal_mode.draw(screen, camera)
-        hard_mode.draw(screen, camera)
-    else:
-        start.draw(screen, camera)
-        option.draw(screen, camera)
-        about.draw(screen, camera)
-        exit.draw(screen, camera)
-    if about_text:
-        screen.blit(font_menu.render("Nhom 2 - L01. Heh", True, white), (100, 450))
-    pygame.display.flip()
-    clock.tick(30)
-    pass
-
 while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-            
-    
-    i = (i+1)%20
-    if i == 0:
-        rand = random.randint(0, 8)
-        match rand:
-            case 0:
-                zombie.append(Entity(ZOM, 0, 290, ["image\zom1.png", "image\zom1.png", "image\zom1.png", "image\zom1.png", "image\zom1.png", "image\zom1.png"], True, False))
-            case 1:
-                zombie.append(Entity(ZOM, 0, 310, ["image\zom2.png", "image\zom2.png", "image\zom2.png", "image\zom2.png", "image\zom2.png", "image\zom2.png"], True, False))
-            case 2:
-                zombie.append(Entity(ZOM, RIGHT_LIMIT, 290, ["image\zom1.png", "image\zom1.png", "image\zom1.png", "image\zom1.png", "image\zom1.png", "image\zom1.png"], True, True))
-            case 3:
-                zombie.append(Entity(ZOM, RIGHT_LIMIT, 310, ["image\zom2.png", "image\zom2.png", "image\zom2.png", "image\zom2.png", "image\zom2.png", "image\zom2.png"], True, True))
-            case 4:
-                book.append(Entity(COIN, random.randint(LEFT_LIMIT, RIGHT_LIMIT), 290, ["image/book.png"], False, False))
-            case _:
-                coin.append(Entity(COIN, random.randint(LEFT_LIMIT, RIGHT_LIMIT), 290, ["image\coin.png"], False, False))
+        
+   #############################################-----menu-----------------         
+    if game_start and not game_over: # menu
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if start.is_mouse_pressed() and not offer_option:
+                    game_start = False
+                elif option.is_mouse_pressed() and not offer_option:
+                    offer_option = True
+                elif about.is_mouse_pressed() and not offer_option:
+                    about_text = True
+                elif normal_mode.is_mouse_pressed() and offer_option:
+                    lives = 70
+                    ammo = 7
+                    offer_option = False
+                elif hard_mode.is_mouse_pressed() and offer_option:
+                    lives = 50
+                    ammo = 5
+                    offer_option = False
+                elif exit.is_mouse_pressed() and not offer_option:
+                    running = False
+
+        screen.fill(black)
+        screen.blit(title, (230, 100))
+        if offer_option:
+            normal_mode.draw(screen, camera)
+            hard_mode.draw(screen, camera)
+        else:
+            start.draw(screen, camera)
+            option.draw(screen, camera)
+            about.draw(screen, camera)
+            exit.draw(screen, camera)
+        if about_text:
+            screen.blit(font_menu.render("Nhom 2 - L01. Heh", True, white), (100, 450))
+        pygame.display.flip()
+        clock.tick(30)
+
+##################################_______Main game screen________###########################
+    if not game_start and not game_over:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        
+        i = (i+1)%20
+        if i == 0:
+            rand = random.randint(0, 8)
+            match rand:
+                case 0:
+                    zombie.append(Obstacle(ZOM, 0, 290, "image\zom1.png", True, False))
+                case 1:
+                    zombie.append(Obstacle(ZOM, 0, 310, "image\zom2.png", True, False))
+                case 2:
+                    zombie.append(Obstacle(ZOM, RIGHT_LIMIT, 290, "image\zom1.png", True, True))
+                case 3:
+                    zombie.append(Obstacle(ZOM, RIGHT_LIMIT, 310, "image\zom2.png", True, True))
+                case 4:
+                    book.append(Obstacle(COIN, random.randint(LEFT_LIMIT, RIGHT_LIMIT), 290, "image/book.png", False, False))
+                case _:
+                    coin.append(Obstacle(COIN, random.randint(LEFT_LIMIT, RIGHT_LIMIT), 290, "image\coin.png", False, False))
 
 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_w] and not player.already_jump:
-        player.jumping = True
-        player.already_jump = True
-    if (keys[pygame.K_a] and not keys[pygame.K_d]) or (not keys[pygame.K_a] and keys[pygame.K_d]):
-        player.moving = True
-        #print(camera.x, player.x, brick.x, brick.width)
-    else: player.moving = False
-    if keys[pygame.K_a]:
-        player.direction = True
-    if keys[pygame.K_d]:
-        player.direction = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w] and not player.already_jump:
+            player.jumping = True
+            player.already_jump = True
+        if (keys[pygame.K_a] and not keys[pygame.K_d]) or (not keys[pygame.K_a] and keys[pygame.K_d]):
+            player.moving = True
+            #print(camera.x, player.x, brick.x, brick.width)
+        else: player.moving = False
+        if keys[pygame.K_a]:
+            player.direction = True
+        if keys[pygame.K_d]:
+            player.direction = False
 
-    if keys[pygame.K_j] and not shooting and stage != 0:
-        print("shoot")
-        shooting = True
-        match stage:
-            case 1:
-                gun_shot.append(Entity(KUNAI, player.x, player.y + 20, ["image\level1.png", "image\level1.png", "image\level1.png", "image\level1.png", "image\level1.png", "image\level1.png"], True, player.direction))
-            case 2:
-                gun_shot.append(Entity(RASENGAN, player.x, player.y + 20, ["image\level2.png", "image\level2.png", "image\level2.png", "image\level2.png", "image\level2.png", "image\level2.png"], True, player.direction))
+        if keys[pygame.K_j] and ammo >= 0 and stage != 0:
+            #shooting = True
+            match stage:
+                case 1:
+                    gun_shot.append(Obstacle(KUNAI, player.x, player.y + 20, "image\level1.png", True, player.direction))
+                    ammo -= 1
+                case 2:
+                    gun_shot.append(Obstacle(RASENGAN, player.x, player.y + 20, "image\level2.png", True, player.direction))
+                    ammo -= 1
 
-###########--------------------level up------------------------------------
-    match point:
-        case 10:
-            stage = 1
-            sounds.playLevelUp()
-        case 20: 
-            stage = 2
-            sounds.playLevelUp()
-        case _:
-            if point%30 == 0 and point != 0:
-                boss.append(Entity(BOSS, 0, 220, ["image/boss.png", "image/boss.png", "image/boss.png", "image/boss.png", "image/boss.png", "image/boss.png"], True, False))
-                boss_appeared = True
+    ###########--------------------level up------------------------------------
+        match point:
+            case 10:
+                stage = 1
                 sounds.playLevelUp()
+            case 20: 
+                stage = 2
+                sounds.playLevelUp()
+            case _:
+                if point%30 == 0 and point != 0:
+                    boss.append(Obstacle(BOSS, 0, 220, "image/boss.png", True, False))
+                    boss_appeared = True
+                    sounds.playLevelUp()
 
-#--------------------------------------##########################################
-    text = font.render("POINT: " + str(point) + "    HP: " + str(lives), True, super_mode)
+    #--------------------------------------##########################################
+        text = font.render("POINT: " + str(point) + "    HP: " + str(lives) + "       AMMO: " + str(ammo), True, super_mode)
 
-    screen.fill(black)
-    player.move()
-    camera.follow(player)
-    
-    
+        screen.fill(black)
+        player.move()
+        camera.follow(player)
+        
+        
 
-######----------------------------------------DRAW-AND CHECK COLLISION-----------------------------------#############
-    for k in background:
-        k.draw(screen, camera)
-    screen.blit(text, (0, 0))
-    for k in coin:
-        k.draw(screen, camera)
-        rect = pygame.Rect(k.x, k.y, k.width, k.height)
-        if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)): 
-            point += 1
-            if super_saiyan: lives += 1
-            sounds.playPop()
-            coin.remove(k)
-    for k in book:
-        k.draw(screen, camera)
-        rect = pygame.Rect(k.x, k.y, k.width, k.height)
-        if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)): 
-            point += 1
-            if super_saiyan: lives += 10
-            sounds.playPop()
-            book.remove(k)
-    player.draw(screen, camera)
-    brick.draw(screen, camera)
-    lock.draw(screen, camera)
+    ######----------------------------------------DRAW-AND CHECK COLLISION-----------------------------------#############
+        for k in background:
+            k.draw(screen, camera)
+        screen.blit(text, (0, 0))
+        for k in coin:
+            k.draw(screen, camera)
+            rect = pygame.Rect(k.x, k.y, k.width, k.height)
+            if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)): 
+                point += 1
+                if super_saiyan: lives += 1
+                sounds.playPop()
+                coin.remove(k)
+        for k in book:
+            k.draw(screen, camera)
+            rect = pygame.Rect(k.x, k.y, k.width, k.height)
+            if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)): 
+                point += 1
+                if super_saiyan: lives += 10
+                sounds.playPop()
+                book.remove(k)
+        player.draw(screen, camera)
+        brick.draw(screen, camera)
+        lock.draw(screen, camera)
 
-    if shooting:
-        gun_shot[0].move()
-        gun_shot[0].draw(screen, camera)
-        if gun_shot[0].x < LEFT_LIMIT or gun_shot[0].x > RIGHT_LIMIT:
-            shooting = False
-            gun_shot.remove(gun_shot[0])
+        #if shooting:
+        for k in gun_shot:
+            k.move()
+            k.draw(screen, camera)
+            if k.x < LEFT_LIMIT or k.x > RIGHT_LIMIT:
+                #shooting = False
+                gun_shot.remove(k)
+                ammo += 1
 
-    if not super_saiyan:
-        rect = pygame.Rect(lock.x, lock.y, lock.width, lock.height)
-        if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)):
-            if lock.value != PASS_LOCK_1: lock.value += 1
-            else: 
-                lock.setColor(green)
-                super_mode = red
-                super_saiyan = True
-                speed[RASENGAN] += 15
+        if not super_saiyan:
+            rect = pygame.Rect(lock.x, lock.y, lock.width, lock.height)
+            if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)):
+                if lock.value != PASS_LOCK_1: lock.value += 1
+                else: 
+                    lock.setColor(green)
+                    super_mode = red
+                    super_saiyan = True
+                    speed[RASENGAN] += 15
 
-    
+        
 
 
-    for k in zombie:
-        k.move()
-        k.draw(screen, camera)
-        rect = pygame.Rect(k.x, k.y, k.width, k.height)
-        if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)):
-            sounds.playHammer()
-            lives -= 1
-            #print("fail")
-            pass
-        if k.x < LEFT_LIMIT or k.x > RIGHT_LIMIT:
-            zombie.remove(k)
-            continue
-        if shooting:
-            if rect.colliderect(pygame.Rect(gun_shot[0].x, gun_shot[0].y, gun_shot[0].width, gun_shot[0].height)):
-                if stage == 1: 
-                    gun_shot.remove(gun_shot[0])
-                    shooting = False
+        for k in zombie:
+            k.move()
+            k.draw(screen, camera)
+            rect = pygame.Rect(k.x, k.y, k.width, k.height)
+            if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)):
+                sounds.playHammer()
+                lives -= 1
+                #print("fail")
+                pass
+            if k.x < LEFT_LIMIT or k.x > RIGHT_LIMIT:
                 zombie.remove(k)
-    
-    if boss_appeared:
-        boss[0].move()
-        boss[0].draw(screen, camera)
-        rect = pygame.Rect(boss[0].x, boss[0].y, boss[0].width, boss[0].height)
-        if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)):
+                continue
+            for l in gun_shot:
+                if rect.colliderect(pygame.Rect(l.x, l.y, l.width, l.height)):
+                    if stage == 1: 
+                        gun_shot.remove(l)
+                        ammo += 1
+                        #shooting = False
+                    zombie.remove(k)
+                    break
+        
+        if boss_appeared:
+            boss[0].move()
+            boss[0].draw(screen, camera)
+            rect = pygame.Rect(boss[0].x, boss[0].y, boss[0].width, boss[0].height)
+            if rect.colliderect(pygame.Rect(player.x, player.y, player.width, player.height)):
+                game_over = True
+        
+        if point % 50 == 0 and point != 0 and boss_appeared:
+            boss_appeared = False
+            boss_defeated += 1
+            boss.remove(boss[0])
+
+            #####_______________game over_____________________##########
+        if lives <= 0:
             game_over = True
-    
-    if point % 50 == 0 and point != 0 and boss_appeared:
-        boss_appeared = False
-        boss_defeated += 1
-        boss.remove(boss[0])
 
-        #####_______________game over_____________________##########
-    if lives <= 0:
-        game_over = True
+        pygame.display.flip()
+        clock.tick(30)
+
+####################-------------------------------------Game_over screen-------------------------
     if game_over:
-        running = False
-        pass
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        
+        #restart.x, restart.y = player.x, player.y
+        screen.fill(black)
+        title = font_menu.render("Your points: " + str(point) + ". Boss defeated: " + str(boss_defeated), True, white)
+        #restart.draw(screen, camera)
+        screen.blit(title, (100, 100))
 
-    pygame.display.flip()
-    clock.tick(30)
+        pygame.display.flip()
+        clock.tick(30)
 
-
-while game_over:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game_over = False
-        elif event.type == pygame.MOUSEBUTTONUP:
-            if exit.is_mouse_pressed():
-                game_over = False
-
-    screen.fill(black)
-    title = font_menu.render("Your points: " + str(point) + ". Boss defeated: " + str(boss_defeated), True, white)
-    screen.blit(title, (100, 100))
-
-    pygame.display.flip()
-    clock.tick(30)
-
+"""elif event.type == pygame.MOUSEBUTTONUP:
+                if restart.is_mouse_pressed():
+                    game_over = False
+                    game_start = True
+                    #_----------------------new game----------------
+                    zombie.clear()
+                    coin.clear()
+                    book.clear()
+                    gun_shot.clear()
+                    boss.clear()
+                    player.x = 405
+                    player.y = 270
+                    lock.value = 0
+                    lock.setColor(blue)
+                    super_saiyan = False
+                    point = 0"""
 pygame.quit()
